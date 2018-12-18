@@ -1,12 +1,15 @@
-import React from "react";
+import React, { Component } from "react";
 import Card from "@material-ui/core/Card";
 import CardHeaderRaw from "@material-ui/core/CardHeader";
 import CardContent from "@material-ui/core/CardContent";
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemText from "@material-ui/core/ListItemText";
 import { withStyles } from "@material-ui/core/styles";
 import AvatarRaw from "@material-ui/core/Avatar";
+import LinearProgress from "@material-ui/core/LinearProgress";
+import * as actions from "../store/actions";
+import Grid from "@material-ui/core/Grid";
+import Chart from "./Chart";
+import { connect } from "react-redux";
+import Map from "./Map";
 
 const cardStyles = theme => ({
   root: {
@@ -30,37 +33,70 @@ const Avatar = withStyles(avatarStyles)(AvatarRaw);
 
 const styles = {
   card: {
-    margin: "5% 25%"
+    margin: "5%"
+  },
+  loader: {
+    margin: "5px"
   }
 };
 
-const NowWhat = props => {
-  const { classes } = props;
-  return (
-    <Card className={classes.card}>
-      <CardHeader title="OK, rithi, you're all setup. Now What?" />
-      <CardContent>
-        <List>
-          <ListItem>
-            <Avatar>1</Avatar>
-            <ListItemText primary="Connect to the Drone API" />
-          </ListItem>
-          <ListItem>
-            <Avatar>2</Avatar>
-            <ListItemText primary="Create your Visualization" />
-          </ListItem>
-          <ListItem>
-            <Avatar>3</Avatar>
-            <ListItemText primary="Poll the API" />
-          </ListItem>
-          <ListItem>
-            <Avatar>4</Avatar>
-            <ListItemText primary="Submit Your App" />
-          </ListItem>
-        </List>
-      </CardContent>
-    </Card>
-  );
+class NowWhat extends Component {
+  componentDidMount() {
+    this.props.getDrone();
+  }
+  render() {
+    const { classes } = this.props;
+    if (!this.props.data.data) {
+      return <LinearProgress className={classes.loader} />;
+    }
+    const chartData = this.props.data.data;
+    const location = {
+      lat: this.props.latitude,
+      lng: this.props.longitude
+    };
+    return (
+      <div>
+        <Grid container>
+          <Grid item xs={6}>
+            <Card className={classes.card}>
+              <CardHeader title="Map Visualization" />
+              <CardContent>
+                <Map data={location} />
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={6}>
+            <Card className={classes.card}>
+              <CardHeader title="Chart Visualization" />
+              <CardContent>
+                <Chart data={chartData} />
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      </div>
+    );
+  }
+}
+
+const mapStateToProps = state => {
+  const { latitude, longitude, data } = state.weather;
+  return {
+    latitude,
+    longitude,
+    data
+  };
 };
 
-export default withStyles(styles)(NowWhat);
+const mapDispatchToProps = dispatch => ({
+  getDrone: () =>
+    dispatch({
+      type: actions.FETCH_DRONE_REQUEST
+    })
+});
+export default withStyles(styles)(
+  connect(
+    mapStateToProps,
+    mapDispatchToProps
+  )(NowWhat)
+);

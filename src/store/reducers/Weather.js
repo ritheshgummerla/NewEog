@@ -17,6 +17,18 @@ const startLoading = (state, action) => {
   return { ...state, loading: true };
 };
 
+const droneDataReceived = (state,action)=>{
+  const {data} = action;
+  const {latitude, longitude} = data.data[data.data.length - 1];
+  if(!data) return state;
+  return {
+    ...state,
+    latitude,
+    longitude,
+    data:action.data
+  }
+}
+
 const weatherIDReceived = (state, action) => {
   return { ...state, weatherId: action.id };
 };
@@ -45,7 +57,8 @@ const weatherDataRecevied = (state, action) => {
 const handlers = {
   [actions.FETCH_WEATHER]: startLoading,
   [actions.WEATHER_ID_RECEIVED]: weatherIDReceived,
-  [actions.WEATHER_DATA_RECEIVED]: weatherDataRecevied
+  [actions.WEATHER_DATA_RECEIVED]: weatherDataRecevied,
+  [actions.DRONE_DATA_RECEIVED]:droneDataReceived
 };
 
 export default (state = initialState, action) => {

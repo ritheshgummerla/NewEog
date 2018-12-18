@@ -1,4 +1,5 @@
 import { takeEvery, call, put, cancel, all } from "redux-saga/effects";
+import { delay } from "redux-saga";
 import API from "../api";
 import * as actions from "../actions";
 
@@ -16,6 +17,19 @@ import * as actions from "../actions";
   Also -- the `*` in function is important; turns it into a "generator"
 
 */
+
+function* getDroneData() {
+  while (true) {
+    const { error, data } = yield call(API.findDrone);
+    yield put({ type: actions.DRONE_DATA_RECEIVED, data });
+    yield delay(4000);
+    if (error) {
+      yield put({ type: actions.API_ERROR, code: error.code });
+      yield cancel();
+      return;
+    }
+  }
+}
 
 function* watchWeatherIdReceived(action) {
   const { id } = action;
@@ -53,7 +67,8 @@ function* watchFetchWeather(action) {
 function* watchAppLoad() {
   yield all([
     takeEvery(actions.FETCH_WEATHER, watchFetchWeather),
-    takeEvery(actions.WEATHER_ID_RECEIVED, watchWeatherIdReceived)
+    takeEvery(actions.WEATHER_ID_RECEIVED, watchWeatherIdReceived),
+    takeEvery(actions.FETCH_DRONE_REQUEST, getDroneData)
   ]);
 }
 
